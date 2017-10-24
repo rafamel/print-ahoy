@@ -1,28 +1,10 @@
-(function() {
-    function tryCloseWindowAfterPrint() {
-        setTimeout(function() {
-            var overlay = document.getElementById('overlayContainer');
-            if (overlay
-                && Array.prototype.indexOf.call(overlay.classList, 'hidden') === -1) {
-                var interval = setInterval(function() {
-                    if (Array.prototype.indexOf.call(overlay.classList, 'hidden') !== -1) {
-                        window.close();
-                        clearInterval(interval);
-                        setTimeout(function() {
-                            window.location = 'about:blank';
-                        }, 500);
-                    }
-                }, 1000);
-            } else console.log('No #overlayContainer element');
-        }, 750);
-    }
-
+(function () {
     function trackDocumentChanges(cb) {
         var MutationObserver = window.MutationObserver;
         var eventListener = window.addEventListener;
 
         if (MutationObserver) {
-            var observer = new MutationObserver(function(mutations) {
+            var observer = new MutationObserver(function (mutations) {
                 if (mutations[0].addedNodes.length
                     || mutations[0].removedNodes.length) {
                     cb();
@@ -38,21 +20,36 @@
     function getEpoch() { return (new Date()).getTime(); }
     var init = getEpoch();
     var lastChange = init;
-    trackDocumentChanges(function() {
+    trackDocumentChanges(function () {
         lastChange = getEpoch();
     });
 
     document.body.style.cursor = 'wait';
-    var interval = setInterval(function() {
+    var interval = setInterval(function () {
         var isLoading = Array.prototype.indexOf.call(document.body.classList, 'loadingInProgress') !== -1;
         var current = getEpoch();
         if (!isLoading
-            && (current > (lastChange + 2000) || current > (init + 10000))
+            && ((current - lastChange) > 2500 || (current - init) > 20000)
         ) {
-            document.body.style.cursor = 'default';
-            window.print();
             clearInterval(interval);
-            tryCloseWindowAfterPrint();
+            document.body.style.cursor = 'default';
+            document.body.classList.add('loaded');
+            window.print();
+            closeAfterPrint();
         }
-    }, 1500);
+    }, 1000);
+
+    function closeAfterPrint() {
+        var lastActive = getEpoch();
+        var interval = setInterval(function () {
+            var current = getEpoch();
+            // Close window if user cancels print (DOM stops changing)
+            // or becomes inactive (which happens after opening the printing dialog)
+            if ((current - lastChange) > 750 || (current - lastActive) > 750) {
+                clearInterval(interval);
+                window.close();
+            }
+            lastActive = current;
+        }, 250);
+    }
 })();

@@ -1,11 +1,16 @@
 {
   "name": "print-ahoy",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "author": "Rafa Mel",
   "description": "Print every PDF that comes into that one folder.",
   "main": "src/app.js",
   "scripts": {
     "start": "electron ./",
+    "build": "run-s build:*",
+    "build:win32": "electron-packager ./ 'Print Ahoy' --platform=win32 --arch=all --electron-version=1.6.15",
+    "build:darwin": "electron-packager ./ 'Print Ahoy' --platform=darwin --electron-version=1.6.15",
+    "build:x86": "electron-packager ./ 'Print Ahoy' --platform=linux --arch=ia32 --electron-version=1.6.15",
+    "build:x86_64": "electron-packager ./ 'Print Ahoy' --platform=linux --arch=x64 --electron-version=1.6.15",
     "lint": "eslint ./src --ext .js",
     "lint:md": "markdownlint *.md --config markdown.json",
     "checks": "run-s lint lint:* && npm outdated",
@@ -28,17 +33,15 @@
     }
   ],
   "bugs": {
-    "url": "https://github.com/rafamel/-moduleName-/issues"
+    "url": "https://github.com/rafamel/print-ahoy/issues"
   },
   "dependencies": {
-    "bluebird": "^3.5.1",
     "chokidar": "^1.7.0",
+    "electron-packager": "^9.1.0",
     "electron-pdf-window": "^1.0.12",
     "electron-platform": "^1.2.0",
     "electron-settings": "^3.1.3",
     "fs-extra": "^4.0.2",
-    "moment": "^2.19.1",
-    "nedb": "^1.8.0",
     "sleep-promise": "^2.0.0"
   },
   "devDependencies": {
