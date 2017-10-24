@@ -9,8 +9,7 @@ const config = require('./config');
 const dockOnMac = require('./utils/dockOnMac');
 const openViewer = require('./utils/openViewer');
 
-const iconPath = path.join(config.assets, 'printer_18.png');
-let appIcon = null;
+let appIcon;
 
 app.on('ready', () => {
     // Initialize
@@ -42,31 +41,30 @@ app.on('ready', () => {
 
     // Watcher
     function watcher(path) {
-        // run watcher
         return chokidar
             // eslint-disable-next-line
             .watch(path, { ignored: /(^|[\/\\])\../, depth: 1 })
-            .on('add', async (path, info) => {
+            .on('add', (path, info) => {
                 if (state.open) state.stack.push(path);
                 else {
                     state.open = true;
-                    await openViewer(path, printJS);
+                    openViewer(path, printJS);
                 }
             });
     }
 
     // Run next on stack if one print task has finished
-    app.on('window-all-closed', async function () {
+    app.on('window-all-closed', () => {
         if (!state.stack.length) {
             state.open = false;
         } else {
             state.open = true;
-            await openViewer(state.stack.shift(), printJS);
+            openViewer(state.stack.shift(), printJS);
         }
     });
 
     // Tray
-    appIcon = new Tray(iconPath);
+    appIcon = new Tray(path.join(config.assets, 'printer_18.png'));
     const contextMenu = Menu.buildFromTemplate([
         {
             label: 'Print Ahoy',

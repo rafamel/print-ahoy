@@ -5,8 +5,22 @@ const fs = require('fs-extra');
 const dockOnMac = require('./dockOnMac');
 const config = require('../config');
 
-module.exports = function (filePath, printJS) {
+module.exports = (filePath, printJS) => {
     const fileWin = new PDFWindow({ show: false });
+
+    // Check file is not still writing
+    let prevSize = 0;
+    const interval = setInterval(() => {
+        const size = fs.statSync(filePath).size;
+        if (size !== prevSize) prevSize = size;
+        else {
+            // If writing has finished, open
+            clearInterval(interval);
+            fileWin.loadURL(`file://${filePath}`);
+            fileWin.maximize();
+            console.log(`[Window] Open ${filePath}`);
+        }
+    }, 500);
 
     fileWin.webContents.on('dom-ready', () => {
         fileWin.webContents.executeJavaScript(
@@ -45,6 +59,7 @@ module.exports = function (filePath, printJS) {
         fileWin.show();
         dockOnMac(true);
         fileWin.webContents.executeJavaScript(printJS);
+        console.log(`[Window] Show ${filePath}`);
     });
 
     fileWin.on('close', () => {
@@ -52,10 +67,4 @@ module.exports = function (filePath, printJS) {
         fs.removeSync(filePath);
         console.log(`[File] Remove ${filePath}`);
     });
-
-    console.log(`[Window] Open ${filePath}`);
-    fileWin.loadURL(`file://${filePath}`);
-    fileWin.maximize();
-
-    return fileWin;
 };
